@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Guardian Angel</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    #map {
+      height: 300px;
+      width: 100%;
+      border-radius: 1rem;
+    }
+  </style>
+</head>
+<body class="bg-white text-gray-800">
+  <!-- Header -->
+  <header class="bg-pink-600 text-white p-4 shadow-md">
+    <div class="container mx-auto flex justify-between items-center">
+      <h1 class="text-2xl font-bold">Guardian Angel</h1>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <section class="bg-gray-100 py-4">
+    <div class="container mx-auto text-center">
+      <div class="flex justify-center space-x-4">
+        <button onclick="showTab('sosTab')" class="px-4 py-2 bg-pink-500 text-white rounded">SOS Alert</button>
+        <button onclick="showTab('incidentTab')" class="px-4 py-2 bg-pink-500 text-white rounded">Incident Log</button>
+        <button onclick="showTab('tipsTab')" class="px-4 py-2 bg-pink-500 text-white rounded">Safety Tips</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SOS Tab -->
+  <section id="sosTab" class="py-8">
+    <div class="container mx-auto text-center px-4">
+      <h2 class="text-2xl font-semibold mb-4">Emergency Help When You Need It Most</h2>
+      <button onclick="sendSOS()" class="bg-red-600 text-white px-8 py-4 rounded-full text-xl shadow-md hover:bg-red-700">
+        🚨 Send SOS Alert
+      </button>
+      <p id="sos-status" class="mt-4 text-sm text-gray-700"></p>
+      <div class="mt-6">
+        <h3 class="text-lg font-semibold mb-2">Live Location:</h3>
+        <div id="map" class="shadow-md mx-auto"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Incident Log Tab -->
+  <section id="incidentTab" class="hidden py-8">
+    <div class="container mx-auto px-4 max-w-xl">
+      <h2 class="text-2xl font-bold mb-4 text-center">Log an Incident</h2>
+      <input id="logTitle" type="text" placeholder="Title" class="w-full p-2 mb-3 border rounded" />
+      <textarea id="logDescription" placeholder="Description" class="w-full p-2 mb-3 border rounded"></textarea>
+      <input id="logLocation" type="text" placeholder="Location" class="w-full p-2 mb-3 border rounded" />
+      <button onclick="logIncident()" class="bg-blue-600 text-white px-6 py-2 rounded shadow hover:bg-blue-700">Log Incident</button>
+      <p id="logStatus" class="mt-3 text-green-600"></p>
+    </div>
+  </section>
+
+  <!-- Safety Tips Tab -->
+  <section id="tipsTab" class="hidden py-8">
+    <div class="container mx-auto px-4 max-w-xl text-center">
+      <h2 class="text-2xl font-bold mb-4">AI Safety Tips</h2>
+      <button onclick="generateTips()" class="bg-green-600 text-white px-6 py-2 rounded shadow hover:bg-green-700">🔐 Generate Safety Tips</button>
+      <div id="tipsOutput" class="mt-4 text-left p-4 bg-gray-100 rounded shadow"></div>
+    </div>
+  </section>
+
+  <!-- JS -->
+  <script>
+    let map;
+    let marker;
+
+    function showTab(tabId) {
+      document.getElementById("sosTab").classList.add("hidden");
+      document.getElementById("incidentTab").classList.add("hidden");
+      document.getElementById("tipsTab").classList.add("hidden");
+      document.getElementById(tabId).classList.remove("hidden");
+    }
+
+    function initMap() {
+      if (navigator.geolocation) {
+        navigator.geolocation.watchPosition(
+          (position) => {
+            const pos = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+            };
+
+            if (!map) {
+              map = new google.maps.Map(document.getElementById("map"), {
+                center: pos,
+                zoom: 15,
+              });
+
+              marker = new google.maps.Marker({
+                position: pos,
+                map: map,
+                title: "Your Location",
+              });
+            } else {
+              map.setCenter(pos);
+              marker.setPosition(pos);
+            }
+          },
+          () => alert("Geolocation failed."),
+          { enableHighAccuracy: true }
+        );
+      }
+    }
+
+    function sendSOS() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+
+          const message = `🚨 SOS Alert!\nLocation: https://maps.google.com/?q=${lat},${lng}`;
+          document.getElementById("sos-status").innerText = "Sending SMS...";
+
+          // 🔗 Replace this with backend call to Twilio/SMS API
+          console.log("Message to send:", message);
+
+          document.getElementById("sos-status").innerText = "SOS alert sent with your location!";
+        });
+      }
+    }
+
+    function logIncident() {
+      const title = document.getElementById("logTitle").value;
+      const desc = document.getElementById("logDescription").value;
+      const loc = document.getElementById("logLocation").value;
+
+      if (title && desc && loc) {
+        console.log("Incident Logged:", { title, desc, loc });
+        document.getElementById("logStatus").innerText = "Incident logged successfully!";
+      } else {
+        document.getElementById("logStatus").innerText = "Please fill all fields.";
+      }
+    }
+
+    function generateTips() {
+      const tips = [
+        "Always share your trip with a trusted contact.",
+        "Avoid dark and isolated areas at night.",
+        "Keep emergency numbers on speed dial.",
+        "Use safety apps with live location sharing.",
+        "Trust your instincts—leave if something feels off.",
+      ];
+
+      const randomTips = tips.sort(() => 0.5 - Math.random()).slice(0, 3);
+      document.getElementById("tipsOutput").innerHTML = `
+        <ul class="list-disc pl-5">
+          ${randomTips.map(tip => `<li>${tip}</li>`).join('')}
+        </ul>
+      `;
+    }
+  </script>
+
+  <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCBL11fSpON_0pGXQyWGbh0A0IUm5r9w1c&callback=initMap">
+  </script>
+</body>
+</html>
